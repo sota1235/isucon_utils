@@ -1,0 +1,4 @@
+make bootstrap command succeeded :rocket:!
+- remote serverにnotify_slackをinstallしました
+- remote serverにkataribeをinstallしました
+- nginx, mysql, systemdの設定ファイルをbackupしました

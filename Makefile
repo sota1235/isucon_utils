@@ -3,7 +3,7 @@ NOTIFY_SLACK_COMMAND="notify_slack -c $(HOME)/tools/notify_slack/notify_slack.to
 KATARIBE_COMMAND="kataribe -conf $(HOME)/tools/kataribe/kataribe.toml"
 # 競技に合わせて書き換える
 HOME=/home/isucon
-SSH_NAME=isucon12
+SSH_NAME=isucon11
 WEB_APP_DIR="webapp/nodejs" # server上のhomeディレクトリから辿ったアプリのディレクトリ
 SERVICE_NAME="isucondition.nodejs.service" # systemctlで管理されているサービス名を設定
 
@@ -24,10 +24,17 @@ install_kataribe: ## kataribeのinstall
 	ssh $(SSH_NAME) "sudo mv /tmp/kataribe/kataribe /usr/local/bin/kataribe"
 	ssh $(SSH_NAME) "which kataribe"
 
-.PHONY: bootstrap
-bootstrap: install_notify_slack install_kataribe ## tool install等の初期設定
-	notify_slack
+.PHONY: backup
+backup: ## 主要ファイルのbackupを取る
+	scp -r $(SSH_NAME):/etc/nginx ./backup
+	scp -r $(SSH_NAME):/etc/mysql ./backup || true # MEMO: permission errorで一部コピーできないことがある
+	scp -r $(SSH_NAME):/etc/systemd ./backup
 
+.PHONY: bootstrap
+bootstrap: install_notify_slack install_kataribe backup ## tool install等の初期設定
+	cat ./tools/makefile/bootstrap_succeed.txt | notify_slack -c ./tools/notify_slack/notify_slack.toml
+
+# Deploy
 .PHONY: deploy deploy_etc
 deploy: deploy_db_settings ## Deploy all
 	## WebApp Deployment
