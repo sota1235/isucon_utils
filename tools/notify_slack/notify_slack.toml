@@ -1,0 +1,7 @@
+[slack]
+url = "${{web hook url}}"
+token = "xoxp-xxxxx"
+channel = "#channel_name"
+username = "ISUCON"
+icon_emoji = ":rocket:"
+interval = "1s"
