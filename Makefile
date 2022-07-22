@@ -1,6 +1,7 @@
 # 書き換える必要なし
 NOTIFY_SLACK_COMMAND=notify_slack -c $(HOME)/tools/notify_slack/notify_slack.toml -snippet
 KATARIBE_COMMAND="kataribe -conf $(HOME)/tools/kataribe/kataribe.toml"
+GIT_BRANCH=main
 # 競技に合わせて書き換える
 HOME=/home/isucon
 SSH_NAME=isucon11
@@ -61,12 +62,18 @@ server_info: ## サーバの基本情報を取得してSlackにぶん投げる
 bootstrap: install_notify_slack install_kataribe install_netdata backup ## tool install等の初期設定
 	cat ./tools/makefile/bootstrap_succeed.txt | notify_slack -c ./tools/notify_slack/notify_slack.toml
 
+.PHONY: setup-git
+setup-git: ## Gitの設定
+	ssh $(SSH_NAME) 'git config --global user.name "$(SSH_NAME)" ; git config --global user.email "$(SSH_NAME)@example.com"'
+	ssh $(SSH_NAME) 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519 1>/dev/null ; cat ~/.ssh/id_ed25519.pub'
+
 # Deploy
-.PHONY: deploy deploy_etc
+.PHONY: deploy
 deploy: deploy_db_settings ## Deploy all
 	## WebApp Deployment
 	# TODO: git pullにする
-	rsync -C --filter=":- $(WEB_APP_DIR)/.gitignore" -av ./$(WEB_APP_DIR) $(SSH_NAME):$(HOME)/webapp
+	ssh $(SSH_NAME) "cd $(HOME) && git pull"
+	ssh $(SSH_NAME) "cd $(HOME) && git checkout $(GIT_BRANCH)"
 	ssh $(SSH_NAME) "cd $(HOME)/$(WEB_APP_DIR) && npm i && npm run build"
 	ssh $(SSH_NAME) "sudo systemctl restart $(SERVICE_NAME)"
 
