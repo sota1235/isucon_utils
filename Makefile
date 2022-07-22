@@ -6,6 +6,7 @@ HOME=/home/isucon
 SSH_NAME=isucon11
 WEB_APP_DIR="webapp/nodejs" # server上のhomeディレクトリから辿ったアプリのディレクトリ
 SERVICE_NAME="isucondition.nodejs.service" # systemctlで管理されているサービス名を設定
+MYSQL_SLOW_QUERY_LOG=/var/log/mysql/mariadb-slow.log
 
 # Initial setup
 .PHONY: install_notify_slack
@@ -68,14 +69,19 @@ deploy_db_settings: ## Deploy /etc configs
 # Benchmark
 .PHONY: bench_pre
 bench_pre: ## ベンチマーク実行前の処理
-	# nginxのaccess log, error logのsnapshotを作成
-	ssh $(SSH_NAME) "sudo mv /var/log/nginx/access.log /var/log/nginx/access.`date +%Y%m%d-%H%M%S`.log"
-	ssh $(SSH_NAME) "sudo mv /var/log/nginx/error.log /var/log/nginx/error.`date +%Y%m%d-%H%M%S`.log"
-	ssh $(SSH_NAME) "sudo touch /var/log/nginx/access.log"
-	ssh $(SSH_NAME) "sudo touch /var/log/nginx/error.log"
+	# nginxのaccess logのsnapshotを作成
+	ssh $(SSH_NAME) "if [ -f /var/log/nginx/access.log ]; then sudo mv /var/log/nginx/access.log /var/log/nginx/access.log.`date +%Y%m%d-%H%M%S`; fi"
+	ssh $(SSH_NAME) "sudo systemctl restart nginx"
 	ssh $(SSH_NAME) "sudo chmod 777 /var/log/nginx /var/log/nginx/*"
+	# mysqlのslow queryのsnapshotを作成
+	ssh $(SSH_NAME) "if [ -f $(MYSQL_SLOW_QUERY_LOG) ]; then sudo mv $(MYSQL_SLOW_QUERY_LOG) $(MYSQL_SLOW_QUERY_LOG).`date +%Y%m%d-%H%M%S`; fi"
+	ssh $(SSH_NAME) "sudo systemctl restart mysql"
 	# mysql slow queryを有効化
-	ssh $(SSH_NAME) "sudo mysql -uisucon -pisucon isucondition < $(HOME)/etc/set_slow_query.sql"
+	ssh $(SSH_NAME) "sudo mysql -uisucon -pisucon isucondition < $(HOME)/tools/mysql/set_slow_query.sql"
+
+.PHONY: bench_run
+bench_run: ## ベンチマークの実行
+	echo "implement" # TODO
 
 .PHONY: bench_post
 bench_post: ## ベンチマーク実行後の処理
