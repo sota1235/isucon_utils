@@ -1,5 +1,5 @@
 # 書き換える必要なし
-NOTIFY_SLACK_COMMAND="notify_slack -c $(HOME)/tools/notify_slack/notify_slack.toml -snippet"
+NOTIFY_SLACK_COMMAND=notify_slack -c $(HOME)/tools/notify_slack/notify_slack.toml -snippet
 KATARIBE_COMMAND="kataribe -conf $(HOME)/tools/kataribe/kataribe.toml"
 # 競技に合わせて書き換える
 HOME=/home/isucon
@@ -29,6 +29,23 @@ backup: ## 主要ファイルのbackupを取る
 	scp -r $(SSH_NAME):/etc/nginx ./backup
 	scp -r $(SSH_NAME):/etc/mysql ./backup || true # MEMO: permission errorで一部コピーできないことがある
 	scp -r $(SSH_NAME):/etc/systemd ./backup
+
+.PHONY: server_info
+server_info: ## サーバの基本情報を取得してSlackにぶん投げる
+	ssh $(SSH_NAME) "echo 'server: $(SSH_NAME)' > /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "echo 'ログインユーザー' >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "w >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "echo 'cpu数' >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "grep processor /proc/cpuinfo >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "echo 'メモリ' >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "free -m >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "echo 'プロセス一覧' >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "ps auxf >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "echo 'ネットワーク' >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "ip a >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "echo 'ファイルシステム' >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "df -Th >> /tmp/server_spec.txt"
+	ssh $(SSH_NAME) "cat /tmp/server_spec.txt | $(NOTIFY_SLACK_COMMAND) -filename '$(SSH_NAME) サーバー情報'"
 
 .PHONY: bootstrap
 bootstrap: install_notify_slack install_kataribe backup ## tool install等の初期設定
