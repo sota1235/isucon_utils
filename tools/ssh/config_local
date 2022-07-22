@@ -7,4 +7,6 @@ Host isucon12
     ControlMaster auto
     ControlPath ~/.ssh/mux-%r@%h:%p
     LocalForward 13306 localhost:3306 # MySQL
+    LocalForward 15432 localhost:5432 # PostgreSQL
+    LocalForward 16379 localhost:6379 # Redis
     LocalForward 19999 localhost:19999 # netdata
