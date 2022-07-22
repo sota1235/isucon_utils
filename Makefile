@@ -102,6 +102,12 @@ bench_post: ## ベンチマーク実行後の処理
 	ssh $(SSH_NAME) "cat /tmp/digest.txt | $(NOTIFY_SLACK_COMMAND) -filename 'SQL解析結果 by pt-query-digest'"
 	ssh $(SSH_NAME) "sudo systemctl restart mariadb.service"
 
+.PHONY: for_end
+for_end: ## 終了前の掃除
+	# netdataの終了
+	ssh $(SSH_NAME) "sudo systemctl stop netdata"
+	ssh $(SSH_NAME) "sudo systemctl disable netdata"
+
 .PHONY: help
 help: ## Print this help
 	@echo 'Usage: make [target]'
