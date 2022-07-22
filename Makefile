@@ -6,7 +6,11 @@ HOME=/home/isucon
 SSH_NAME=isucon11
 WEB_APP_DIR="webapp/nodejs" # server上のhomeディレクトリから辿ったアプリのディレクトリ
 SERVICE_NAME="isucondition.nodejs.service" # systemctlで管理されているサービス名を設定
+# MySQL
 MYSQL_SLOW_QUERY_LOG=/var/log/mysql/mariadb-slow.log
+MYSQL_USER=isucon
+MYSQL_PASS=isucon
+MYSQL_DB=isucondition
 
 # Initial setup
 .PHONY: install_notify_slack
@@ -77,7 +81,7 @@ bench_pre: ## ベンチマーク実行前の処理
 	ssh $(SSH_NAME) "if [ -f $(MYSQL_SLOW_QUERY_LOG) ]; then sudo mv $(MYSQL_SLOW_QUERY_LOG) $(MYSQL_SLOW_QUERY_LOG).`date +%Y%m%d-%H%M%S`; fi"
 	ssh $(SSH_NAME) "sudo systemctl restart mysql"
 	# mysql slow queryを有効化
-	ssh $(SSH_NAME) "sudo mysql -uisucon -pisucon isucondition < $(HOME)/tools/mysql/set_slow_query.sql"
+	ssh $(SSH_NAME) "sudo mysql -u$(MYSQL_USER) -p$(MYSQL_PASS) $(MYSQL_DB) < $(HOME)/tools/mysql/set_slow_query.sql"
 
 .PHONY: bench_run
 bench_run: ## ベンチマークの実行
@@ -86,11 +90,11 @@ bench_run: ## ベンチマークの実行
 .PHONY: bench_post
 bench_post: ## ベンチマーク実行後の処理
 	# Kataribeの解析結果をSlackに投稿
-	ssh $(SSH_NAME) "cat /var/log/nginx/access.log | $(KATARIBE_COMMAND) | $(NOTIFY_SLACK_COMMAND)"
-	# alp解析結果をSlackに投稿
+	ssh $(SSH_NAME) "cat /var/log/nginx/access.log | $(KATARIBE_COMMAND) | $(NOTIFY_SLACK_COMMAND) -filename 'アクセスログ解析結果 by kataribe'"
+	# pt-query-digest解析結果をSlackに投稿
 	ssh $(SSH_NAME) "sudo chmod 777 /tmp/slow.log"
 	ssh $(SSH_NAME) "pt-query-digest /tmp/slow.log > /tmp/digest.txt"
-	ssh $(SSH_NAME) "cat /tmp/digest.txt | $(NOTIFY_SLACK_COMMAND)"
+	ssh $(SSH_NAME) "cat /tmp/digest.txt | $(NOTIFY_SLACK_COMMAND) -filename 'SQL解析結果 by pt-query-digest'"
 	ssh $(SSH_NAME) "sudo systemctl restart mariadb.service"
 
 .PHONY: help
