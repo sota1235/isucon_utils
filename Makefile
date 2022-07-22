@@ -29,6 +29,11 @@ install_kataribe: ## kataribeのinstall
 	ssh $(SSH_NAME) "sudo mv /tmp/kataribe/kataribe /usr/local/bin/kataribe"
 	ssh $(SSH_NAME) "which kataribe"
 
+.PHONY: install_netdata
+install_netdata: ## netdataのinstall
+	ssh $(SSH_NAME) "bash <(curl -Ss https://my-netdata.io/kickstart.sh) --no-updates --stable-channel"
+	ssh $(SSH_NAME) "sudo systemctl status netdata"
+
 .PHONY: backup
 backup: ## 主要ファイルのbackupを取る
 	scp -r $(SSH_NAME):/etc/nginx ./backup
@@ -53,7 +58,7 @@ server_info: ## サーバの基本情報を取得してSlackにぶん投げる
 	ssh $(SSH_NAME) "cat /tmp/server_spec.txt | $(NOTIFY_SLACK_COMMAND) -filename '$(SSH_NAME) サーバー情報'"
 
 .PHONY: bootstrap
-bootstrap: install_notify_slack install_kataribe backup ## tool install等の初期設定
+bootstrap: install_notify_slack install_kataribe install_netdata backup ## tool install等の初期設定
 	cat ./tools/makefile/bootstrap_succeed.txt | notify_slack -c ./tools/notify_slack/notify_slack.toml
 
 # Deploy
