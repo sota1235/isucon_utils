@@ -35,6 +35,11 @@ install_netdata: ## netdataのinstall
 	ssh $(SSH_NAME) "bash <(curl -Ss https://my-netdata.io/kickstart.sh) --no-updates --stable-channel"
 	ssh $(SSH_NAME) "sudo systemctl status netdata"
 
+.PHONY: setting_up_ssh
+setting_up_ssh: ## メンバーのssh鍵を配置する
+	# TODO: {TEAM_MATE_GITHUB_ACCOUNT}をチームメイトのアカウント名にreplaceする
+	ssh $(SSH_NAME) "curl https://github.com/{TEAM_MATE_GITHUB_ACCOUNT}.keys >> ~/.ssh/authorized_keys"
+
 .PHONY: backup
 backup: ## 主要ファイルのbackupを取る
 	scp -r $(SSH_NAME):/etc/nginx ./backup

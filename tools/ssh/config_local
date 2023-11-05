@@ -2,7 +2,7 @@ Host isucon12
     HostName ${IP Address}
     Port 22
     User isucon
-    IdentityFile ~/.ssh/your_key # TODO fix
+    IdentityFile ~/.ssh/your_key # TODO GitHubに利用してる秘密鍵のpathを設定する
     IdentitiesOnly=yes
     ControlMaster auto
     ControlPath ~/.ssh/mux-%r@%h:%p
