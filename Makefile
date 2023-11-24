@@ -83,11 +83,18 @@ setup-git: ## Gitの設定
 
 # Deploy
 .PHONY: deploy
-deploy: deploy_db_settings ## Deploy all
+deploy: deploy_code deploy_nginx deploy_db_settings ## Deploy all
 	## WebApp Deployment
 	ssh $(SSH_NAME) "cd $(HOME) && git pull"
 	ssh $(SSH_NAME) "cd $(HOME) && git checkout $(GIT_BRANCH)"
 	ssh $(SSH_NAME) "cd $(HOME)/$(WEB_APP_DIR) && npm i && npm run build"
+	ssh $(SSH_NAME) "sudo systemctl restart $(SERVICE_NAME)"
+
+.PHONY: deploy_code
+deploy_code: ## ソースコードをデプロイする
+	ssh $(SSH_NAME) "cd $(HOME) && git fetch --prune"
+	ssh $(SSH_NAME) "cd $(HOME) && git checkout $(GIT_BRANCH)"
+	ssh $(SSH_NAME) "cd $(HOME) && git merge origin/$(GIT_BRANCH)"
 	ssh $(SSH_NAME) "sudo systemctl restart $(SERVICE_NAME)"
 
 .PHONY: deploy_db_settings
@@ -96,6 +103,11 @@ deploy_db_settings: ## Deploy /etc configs
 	ssh $(SSH_NAME) "sudo systemctl restart mysql"
 	# ssh $(SSH_NAME) "sudo systemctl restart mariadb"
 	# ssh $(SSH_NAME) "sudo systemctl restart postgresql-*"
+
+.PHONY: deploy_nginx
+deploy_nginx: ## Deploy /etc configs
+	ssh $(SSH_NAME) "sudo nginx -t"
+	ssh $(SSH_NAME) "sudo systemctl restart nginx"
 
 # Util
 .PHONY: health_check
