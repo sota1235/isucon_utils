@@ -80,7 +80,6 @@ bootstrap: install_notify_slack install_kataribe install_netdata backup ## tool 
 .PHONY: setup-git
 setup-git: ## Gitの設定
 	ssh $(SSH_NAME) 'git config --global user.name "$(SSH_NAME)" ; git config --global user.email "$(SSH_NAME)@example.com"'
-	ssh $(SSH_NAME) 'ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519 1>/dev/null ; cat ~/.ssh/id_ed25519.pub'
 
 # Deploy
 .PHONY: deploy
