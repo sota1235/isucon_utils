@@ -35,6 +35,11 @@ install_netdata: ## netdataのinstall
 	ssh $(SSH_NAME) "bash <(curl -Ss https://my-netdata.io/kickstart.sh) --no-updates --stable-channel"
 	ssh $(SSH_NAME) "sudo systemctl status netdata"
 
+.PHONY: install_redis
+install_redis: ## redisのinstall
+	ssh $(SSH_NAME) "sudo apt install redis-server"
+	ssh $(SSH_NAME) "sudo systemctl status redis-server"
+
 .PHONY: setting_up_ssh
 setting_up_ssh: ## メンバーのssh鍵を配置する
 	# TODO: {TEAM_MATE_GITHUB_ACCOUNT}をチームメイトのアカウント名にreplaceする
