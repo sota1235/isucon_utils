@@ -45,6 +45,11 @@ setting_up_ssh: ## メンバーのssh鍵を配置する
 	# TODO: {TEAM_MATE_GITHUB_ACCOUNT}をチームメイトのアカウント名にreplaceする
 	ssh $(SSH_NAME) "curl https://github.com/{TEAM_MATE_GITHUB_ACCOUNT}.keys >> ~/.ssh/authorized_keys"
 
+.PHONY: gen_ssh_pubkey
+gen_ssh_pubkey: ## serverでssh公開鍵を生成する
+	ssh $(SSH_NAME) "ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa"
+	ssh $(SSH_NAME) "cat ~/.ssh/id_rsa.pub"
+
 .PHONY: backup
 backup: ## 主要ファイルのbackupを取る
 	scp -r $(SSH_NAME):/etc/nginx ./backup
